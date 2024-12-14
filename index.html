@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>斗鱼客服问题搜索</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://ai-public.mastergo.com/gen_page/tailwind-custom.css"
+      rel="stylesheet"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com/3.4.5?plugins=forms@0.5.7,typography@0.5.13,aspect-ratio@0.4.2,container-queries@0.1.1"></script>
+    <script
+      src="https://ai-public.mastergo.com/gen_page/tailwind-config.min.js"
+      data-color="#3176FF"
+      data-border-radius="small"
+    ></script>
+  </head>
+  <body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-6">
+      <!-- <h1 class="text-3xl font-bold text-center text-blue-600 mb-6">斗鱼客服问题搜索</h1> -->
+      <div class="flex justify-center mb-6">
+        <input
+          type="text"
+          id="searchInput"
+          class="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="斗鱼客服问题搜索..."
+        />
+      </div>
+      <div
+        id="questionList"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
+        <!-- 问题列表将动态生成 -->
+      </div>
+    </div>
+
+    <script>
+      // 默认显示的数据
+      const data = [
+        {
+          id: 433,
+          name: "2024年斗鱼粉丝牌亲密度表",
+          answer:
+            "https://c-yuba.douyucdn.cn/yubavod/b/aBADyjMGWE7X/981f88de38133252e749a272484077a1.jpg",
+        },
+      ];
+
+      // 渲染问题列表
+      function renderQuestions(questions) {
+        const questionList = document.getElementById("questionList");
+        questionList.innerHTML = "";
+
+        questions.forEach((question) => {
+          const questionCard = document.createElement("div");
+          questionCard.className =
+            "bg-white shadow-lg rounded-lg p-4 hover:shadow-xl transition duration-300 overflow-hidden";
+          questionCard.innerHTML = `
+                    <h2 class="text-xl font-semibold text-blue-600 mb-2">${question.name}</h2>
+                    <p class="text-gray-700 break-words">${question.answer}</p>
+                `;
+          questionList.appendChild(questionCard);
+        });
+      }
+
+      // 过滤问题
+      function filterQuestions(query, questions) {
+        const filtered = questions.filter((question) =>
+          question.name.toLowerCase().includes(query.toLowerCase())
+        );
+        renderQuestions(filtered);
+      }
+
+      // 从 data.json 加载数据
+      async function loadDataFromJSON() {
+        try {
+          const response = await fetch("data.json");
+          const jsonData = await response.json();
+          return jsonData;
+        } catch (error) {
+          console.error("加载 data.json 失败:", error);
+          return [];
+        }
+      }
+
+      // 初始渲染
+      renderQuestions(data);
+
+      // 搜索框事件监听
+      document
+        .getElementById("searchInput")
+        .addEventListener("input", async (e) => {
+          const searchQuery = e.target.value;
+          const jsonData = await loadDataFromJSON(); // 从 data.json 加载数据
+          filterQuestions(searchQuery, jsonData); // 使用加载的数据进行过滤
+        });
+    </script>
+  </body>
+</html>
