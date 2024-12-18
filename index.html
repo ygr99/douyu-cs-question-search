@@ -8,26 +8,22 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
       rel="stylesheet"
     />
-    <link
-      href="https://ai-public.mastergo.com/gen_page/tailwind-custom.css"
-      rel="stylesheet"
-    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
-    <script src="https://cdn.tailwindcss.com/3.4.5?plugins=forms@0.5.7,typography@0.5.13,aspect-ratio@0.4.2,container-queries@0.1.1"></script>
-    <script
-      src="https://ai-public.mastergo.com/gen_page/tailwind-config.min.js"
-      data-color="#3176FF"
-      data-border-radius="small"
-    ></script>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body class="bg-gray-100 font-sans">
     <div class="container mx-auto p-6">
-      <!-- <h1 class="text-3xl font-bold text-center text-blue-600 mb-6">斗鱼客服问题搜索</h1> -->
+      <!-- 加载提示 -->
+      <div id="loading" class="text-center text-gray-500 text-lg">
+        加载中...
+      </div>
+
+      <!-- 搜索框 -->
       <div class="flex justify-center mb-6">
         <input
           type="text"
@@ -36,6 +32,8 @@
           placeholder="斗鱼客服问题搜索..."
         />
       </div>
+
+      <!-- 问题列表 -->
       <div
         id="questionList"
         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
@@ -55,26 +53,29 @@
         },
       ];
 
+      // 缓存数据
+      let cachedData = null;
+
       // 渲染问题列表
       function renderQuestions(questions) {
         const questionList = document.getElementById("questionList");
-        questionList.innerHTML = "";
+        const fragment = document.createDocumentFragment(); // 使用 DocumentFragment
 
         questions.forEach((question) => {
           const questionCard = document.createElement("div");
           questionCard.className =
             "bg-white shadow-lg rounded-lg p-4 hover:shadow-xl transition duration-300 overflow-hidden relative";
           questionCard.innerHTML = `
-                    <h2 class="text-xl font-semibold text-blue-600 mb-2 cursor-pointer flex items-center">
-                        <span class="flex-1">${question.name}</span>
-                        <span class="ml-2 text-gray-500 text-lg">+</span>
-                    </h2>
-                    <div class="question-content max-h-0 overflow-hidden transition-all duration-300">
-                        <p class="text-gray-700 break-words">${processAnswer(
-                          question.answer
-                        )}</p>
-                    </div>
-                `;
+            <h2 class="text-xl font-semibold text-blue-600 mb-2 cursor-pointer flex items-center">
+              <span class="flex-1">${question.name}</span>
+              <span class="ml-2 text-gray-500 text-lg">+</span>
+            </h2>
+            <div class="question-content max-h-0 overflow-hidden transition-all duration-300">
+              <p class="text-gray-700 break-words">${processAnswer(
+                question.answer
+              )}</p>
+            </div>
+          `;
 
           // 获取元素
           const nameElement = questionCard.querySelector("h2");
@@ -97,8 +98,11 @@
             }
           });
 
-          questionList.appendChild(questionCard);
+          fragment.appendChild(questionCard);
         });
+
+        questionList.innerHTML = ""; // 清空现有内容
+        questionList.appendChild(fragment); // 一次性插入
       }
 
       // 过滤问题
@@ -111,20 +115,26 @@
 
       // 从 data.json 加载数据
       async function loadDataFromJSON() {
+        if (cachedData) return cachedData; // 如果已有缓存，直接返回
+
         try {
           const response = await fetch("data.json");
+          if (!response.ok) throw new Error("数据加载失败");
           const jsonData = await response.json();
+          cachedData = jsonData; // 缓存数据
           return jsonData;
         } catch (error) {
           console.error("加载 data.json 失败:", error);
+          alert("数据加载失败，请稍后重试。"); // 显示错误提示
           return [];
         }
       }
 
       // HTML 实体解码函数
       function htmlDecode(input) {
-        const doc = new DOMParser().parseFromString(input, "text/html");
-        return doc.documentElement.textContent;
+        const textarea = document.createElement("textarea");
+        textarea.innerHTML = input;
+        return textarea.value;
       }
 
       // 处理 answer 中的换行符和 HTML 实体
@@ -136,7 +146,11 @@
       }
 
       // 初始渲染
-      renderQuestions(data);
+      document.getElementById("loading").style.display = "block"; // 显示加载提示
+      loadDataFromJSON().then((data) => {
+        renderQuestions(data);
+        document.getElementById("loading").style.display = "none"; // 隐藏加载提示
+      });
 
       // 搜索框事件监听
       document
