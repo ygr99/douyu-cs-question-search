@@ -63,11 +63,40 @@
         questions.forEach((question) => {
           const questionCard = document.createElement("div");
           questionCard.className =
-            "bg-white shadow-lg rounded-lg p-4 hover:shadow-xl transition duration-300 overflow-hidden";
+            "bg-white shadow-lg rounded-lg p-4 hover:shadow-xl transition duration-300 overflow-hidden relative";
           questionCard.innerHTML = `
-                    <h2 class="text-xl font-semibold text-blue-600 mb-2">${question.name}</h2>
-                    <p class="text-gray-700 break-words">${question.answer}</p>
+                    <h2 class="text-xl font-semibold text-blue-600 mb-2 cursor-pointer flex items-center">
+                        <span class="flex-1">${question.name}</span>
+                        <span class="ml-2 text-gray-500 text-lg">+</span>
+                    </h2>
+                    <div class="question-content max-h-0 overflow-hidden transition-all duration-300">
+                        <p class="text-gray-700 break-words">${processAnswer(
+                          question.answer
+                        )}</p>
+                    </div>
                 `;
+
+          // 获取元素
+          const nameElement = questionCard.querySelector("h2");
+          const contentElement =
+            questionCard.querySelector(".question-content");
+          const iconElement = questionCard.querySelector("h2 span:last-child");
+
+          // 点击 name 时切换展开/折叠
+          nameElement.addEventListener("click", () => {
+            if (contentElement.classList.contains("max-h-0")) {
+              // 展开内容
+              contentElement.classList.remove("max-h-0");
+              contentElement.classList.add("max-h-none");
+              iconElement.textContent = "-"; // 更新图标为折叠
+            } else {
+              // 折叠内容
+              contentElement.classList.remove("max-h-none");
+              contentElement.classList.add("max-h-0");
+              iconElement.textContent = "+"; // 更新图标为展开
+            }
+          });
+
           questionList.appendChild(questionCard);
         });
       }
@@ -90,6 +119,20 @@
           console.error("加载 data.json 失败:", error);
           return [];
         }
+      }
+
+      // HTML 实体解码函数
+      function htmlDecode(input) {
+        const doc = new DOMParser().parseFromString(input, "text/html");
+        return doc.documentElement.textContent;
+      }
+
+      // 处理 answer 中的换行符和 HTML 实体
+      function processAnswer(answer) {
+        // 先解码 HTML 实体
+        const decodedAnswer = htmlDecode(answer);
+        // 将换行符 \n 替换为 <br> 标签
+        return decodedAnswer.replace(/\n/g, "<br>");
       }
 
       // 初始渲染
